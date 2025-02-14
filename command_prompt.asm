@@ -6,6 +6,7 @@
 %include "command_clear.asm"
 %include "command_exit.asm"
 %include "command_help.asm"  ; Add this include
+%include "command_hw.asm"    ; Certifique-se que esta linha existe no início do arquivo
 
 command_prompt:
     mov si, prompt
@@ -38,6 +39,12 @@ command_prompt:
     call compare_strings
     je .do_exit
 
+    ; Check if command is hw
+    mov si, input_buffer
+    mov di, hw_command
+    call compare_strings
+    je .do_hw
+
     mov si, err_msg
     call print_string
     jmp command_prompt
@@ -61,12 +68,21 @@ command_prompt:
     call command_exit
     ret
 
+.do_hw:
+    push ax           ; Salva registradores que podem ser alterados
+    push bx
+    call command_hw   ; Chama o comando hw
+    pop bx            ; Restaura registradores
+    pop ax
+    jmp command_prompt
+
 ; Data section
 prompt db '> ', 0
 exit_command db 'exit', 0
 clear_command db 'clear', 0
 echo_command db 'echo', 0
 help_command db 'help', 0    ; Add this line
+hw_command db 'hw', 0
 err_msg db 'Unknown command', 0x0D, 0x0A, 0  ; Improved error message
 input_buffer times 24 db 0        ; Reduced from 32 to 24 bytes
 

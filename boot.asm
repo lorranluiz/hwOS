@@ -11,22 +11,23 @@ start:
 
     ; Load additional sectors
     mov ah, 0x02    ; BIOS read sector function
-    mov al, 3       ; Number of sectors to read
+    mov al, 4       ; Number of sectors to read
     mov ch, 0       ; Cylinder number
     mov cl, 2       ; Sector number (1-based, sector 2)
     mov dh, 0       ; Head number
-    mov dl, 0x00    ; Drive number (floppy disk)
+    mov dl, 0x80    ; Drive number (change to 0x80 for hard disk)
     mov bx, second_sector  ; Load sectors after bootloader
     int 0x13
     jc error        ; If carry flag set, there was an error
 
     ; Verify if sectors were read correctly
-    cmp al, 3       ; AL returns number of sectors actually read
+    cmp al, 4       ; AL returns number of sectors actually read
     jne error       ; If not all sectors were read, show error
 
     ; After successful load, continue with execution
     call display_welcome
-    call command_prompt
+    call init_filesystem    ; Initialize filesystem first
+    call command_prompt    ; Then start command prompt
     jmp $           ; Infinite loop
 
 error:
@@ -46,3 +47,6 @@ second_sector:
 %include "welcome_message.asm"
 ; Include command prompt
 %include "command_prompt.asm"
+; Include filesystem
+%include "filesystem.asm"
+%include "command_hw.asm"
